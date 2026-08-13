@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ĐẤU TRÍ TIẾNG ANH: VS STRAWBERRY AI</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #090d16;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ffffff;
+        }
+
+        #arena-wrapper {
+            position: relative;
+            width: 850px;
+            height: 620px;
+            background: radial-gradient(circle, #1a233a 0%, #090d16 100%);
+            border: 3px solid #3b82f6;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 35px rgba(59, 130, 246, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar: VS Arena Status */
+        #status-bar {
+            height: 80px;
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 2px solid #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .fighter {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hp-bar-container {
+            width: 160px;
+            height: 16px;
+            background: #334155;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #475569;
+        }
+
+        .hp-bar {
+            height: 100%;
+            width: 100%;
+            transition: width 0.4s ease-in-out;
+        }
+
+        #player-hp { background: #22c55e; }
+        #ai-hp { background: #ef4444; }
+
+        .vs-badge {
+            font-size: 24px;
+            font-weight: 900;
+            color: #f59e0b;
+            text-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
+        /* Timer Section */
+        #timer-box {
+            position: absolute;
+            top: 95px;
+            right: 35px;
+            background: #1e1b4b;
+            border: 2px solid #6366f1;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #a5b4fc;
+        }
+
+        /* Question Box */
+        #quiz-area {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .q-header {
+            font-size: 14px;
+            color: #38bdf8;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .q-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid #334155;
+            padding: 20px 25px;
+            border-radius: 14px;
+            font-size: 18px;
+            line-height: 1.6;
+            color: #f8fafc;
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .blank {
+            color: #f59e0b;
+            font-weight: bold;
+            border-bottom: 2px dashed #f59e0b;
+            padding: 0 8px;
+        }
+
+        /* Options Grid */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .btn-opt {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .btn-opt:hover:not(:disabled) {
+            background: #334155;
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        }
+
+        .btn-opt.correct {
+            background: #15803d !important;
+            border-color: #22c55e !important;
+            color: white;
+        }
+
+        .btn-opt.wrong {
+            background: #991b1b !important;
+            border-color: #ef4444 !important;
+            color: white;
+        }
+
+        /* Bottom Controls */
+        #bottom-bar {
+            height: 70px;
+            padding: 0 30px;
+            background: rgba(15, 23, 42, 0.9);
+            border-top: 1px solid #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-hint {
+            background: #854d0e;
+            color: #fef08a;
+            border: 1px solid #ca8a04;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-hint:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #btn-next {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            display: none;
+        }
+
+        #btn-next:hover { background: #1d4ed8; }
+
+        /* Screens */
+        .overlay-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(9, 13, 22, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 25px;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-primary:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+
+<div id="arena-wrapper">
+    <!-- Top Status Bar -->
+    <div id="status-bar">
+        <div class="fighter">
+            <span style="font-size: 28px;">🧠</span>
+            <div>
+                <div style="font-size: 13px; color: #94a3b8;">THỦ KHOA</div>
+                <div class="hp-bar-container"><div id="player-hp" class="hp-bar"></div></div>
+            </div>
+        </div>
+
+        <div class="vs-badge">VS</div>
+
+        <div class="fighter">
+            <div>
+                <div style="font-size: 13px; color: #94a3b8; text-align: right;">STRAWBERRY BOT</div>
+                <div class="hp-bar-container"><div id="ai-hp" class="hp-bar"></div></div>
+            </div>
+            <span style="font-size: 28px;">🤖</span>
+        </div>
+    </div>
+
+    <!-- Timer -->
+    <div id="timer-box">⏱️ <span id="time-left">15</span>s</div>
+
+    <!-- Quiz Area -->
+    <div id="quiz-area">
+        <div class="q-header" id="q-number">CÂU HỎI 1 / 15</div>
+        <div class="q-card" id="q-text">Loading question...</div>
+        <div class="options-grid" id="options-container"></div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div id="bottom-bar">
+        <button class="btn-hint" id="btn-hint" onclick="useHint()">💡 Tuyệt chiêu Loại trừ (50:50)</button>
+        <button id="btn-next" onclick="nextQuestion()">Tung đòn tiếp ➔</button>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="overlay-screen">
+        <h1 style="color: #38bdf8; font-size: 36px; margin-bottom: 10px;">⚡ ĐẤU TRÍ TIẾNG ANH ⚡</h1>
+        <p style="color: #94a3b8; max-width: 500px; line-height: 1.6;">
+            Thách đấu với <b>Strawberry AI Bot</b> thông qua 15 câu hỏi Giới từ & Collocation nâng cao!<br><br>
+            • Mỗi câu hỏi có <b>15 giây</b>.<br>
+            • Trả lời đúng: Giảm HP của AI.<br>
+            • Trả lời sai/Hết giờ: Bị AI tấn công ngược!
+        </p>
+        <button class="btn-primary" onclick="startGame()">VÀO SÀN ĐẤU</button>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="overlay-screen" style="display: none;">
+        <h1 id="end-title" style="font-size: 36px; margin-bottom: 15px;">RESULTS</h1>
+        <p id="end-desc" style="color: #cbd5e1; font-size: 18px; max-width: 500px; line-height: 1.5;"></p>
+        <button class="btn-primary" onclick="restartGame()">REMATCH (ĐẤU LẠI)</button>
+    </div>
+</div>
+
+<script>
+    // BỘ DỮ LIỆU CÂU HỎI DỰA TRÊN LIST CỦA BẠN
+    const questions = [
+        { text: "The success of the project hinges <span class='blank'>?</span> securing final approval.", options: ["on/upon", "over", "at", "in"], correct: 0, exp: "hinge on/upon: phụ thuộc vào" },
+        { text: "Her kindness disposed everyone <span class='blank'>?</span> her, making her popular.", options: ["to/towards", "for", "with", "against"], correct: 0, exp: "dispose someone to/towards sb: làm ai có thiện cảm" },
+        { text: "He was exonerated <span class='blank'>?</span> any wrongdoing after the inquiry.", options: ["of/from", "for", "with", "about"], correct: 0, exp: "exonerate someone of/from sth: xá tội, miễn truy cứu" },
+        { text: "The climate is not conducive <span class='blank'>?</span> growing delicate crops.", options: ["to", "for", "with", "about"], correct: 0, exp: "conducive to sth: thuận lợi cho" },
+        { text: "We must abstain <span class='blank'>?</span> making hasty decisions.", options: ["from", "of", "against", "to"], correct: 0, exp: "abstain from: kiêng/tránh làm gì" },
+        { text: "The theory is predicated <span class='blank'>?</span> the assumption that dark energy is constant.", options: ["on/upon", "in", "with", "at"], correct: 0, exp: "predicated on/upon: dựa trên" },
+        { text: "She professed a deep admiration <span class='blank'>?</span> her mentor's life work.", options: ["for", "of", "to", "with"], correct: 0, exp: "admiration for: sự ngưỡng mộ dành cho" },
+        { text: "His actions were tantamount <span class='blank'>?</span> a confession of guilt.", options: ["to", "for", "with", "from"], correct: 0, exp: "tantamount to: tương đương với" },
+        { text: "You are bereft <span class='blank'>?</span> any real justification for this decision.", options: ["of", "from", "with", "for"], correct: 0, exp: "bereft of: thiếu hụt/không có" },
+        { text: "The old custom has fallen <span class='blank'>?</span> disuse over the past century.", options: ["into", "under", "within", "on"], correct: 0, exp: "fall into disuse: bị bỏ không dùng" },
+        { text: "Technology accounts <span class='blank'>?</span> 40% of productivity growth.", options: ["for", "to", "with", "on"], correct: 0, exp: "account for: chiếm tỷ lệ / giải thích" },
+        { text: "The reforms brought <span class='blank'>?</span> significant improvements.", options: ["about", "up", "on", "out"], correct: 0, exp: "bring about: mang lại, gây ra" },
+        { text: "Activists call <span class='blank'>?</span> immediate action on climate change.", options: ["for", "off", "on", "up"], correct: 0, exp: "call for: kêu gọi, yêu cầu" },
+        { text: "Scientists carried <span class='blank'>?</span> a series of experiments.", options: ["out", "on", "away", "off"], correct: 0, exp: "carry out: thực hiện" },
+        { text: "Economic inequality gives rise <span class='blank'>?</span> social unrest.", options: ["to", "for", "with", "from"], correct: 0, exp: "give rise to: gây ra/làm phát sinh" }
+    ];
+
+    let currentIdx = 0;
+    let playerHP = 100;
+    let aiHP = 100;
+    let timer = null;
+    let timeLeft = 15;
+    let hintUsed = false;
+
+    function startGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (currentIdx >= questions.length || playerHP <= 0 || aiHP <= 0) {
+            endGame();
+            return;
+        }
+
+        let q = questions[currentIdx];
+        document.getElementById('q-number').innerText = `CÂU HỎI ${currentIdx + 1} / ${questions.length}`;
+        document.getElementById('q-text').innerHTML = q.text;
+        document.getElementById('btn-next').style.display = 'none';
+
+        // Render options (xáo trộn vị trí)
+        let container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        let opts = q.options.map((opt, i) => ({ text: opt, isCorrect: i === q.correct }));
+        opts.sort(() => Math.random() - 0.5); // Shuffle
+
+        opts.forEach((item) => {
+            let btn = document.createElement('button');
+            btn.className = 'btn-opt';
+            btn.innerText = item.text;
+            btn.onclick = () => checkAnswer(btn, item.isCorrect);
+            container.appendChild(btn);
+        });
+
+        resetTimer();
+    }
+
+    function checkAnswer(selectedBtn, isCorrect) {
+        clearInterval(timer);
+        disableAllOpts();
+
+        if (isCorrect) {
+            selectedBtn.classList.add('correct');
+            aiHP = Math.max(0, aiHP - 20);
+        } else {
+            selectedBtn.classList.add('wrong');
+            playerHP = Math.max(0, playerHP - 20);
+            highlightCorrect();
+        }
+
+        updateHPBars();
+        document.getElementById('btn-next').style.display = 'block';
+    }
+
+    function highlightCorrect() {
+        let q = questions[currentIdx];
+        let btns = document.querySelectorAll('.btn-opt');
+        btns.forEach(btn => {
+            if (btn.innerText === q.options[q.correct]) {
+                btn.classList.add('correct');
+            }
+        });
+    }
+
+    function disableAllOpts() {
+        let btns = document.querySelectorAll('.btn-opt');
+        btns.forEach(btn => btn.disabled = true);
+    }
+
+    function resetTimer() {
+        clearInterval(timer);
+        timeLeft = 15;
+        document.getElementById('time-left').innerText = timeLeft;
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById('time-left').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                timeOut();
+            }
+        }, 1000);
+    }
+
+    function timeOut() {
+        disableAllOpts();
+        playerHP = Math.max(0, playerHP - 20);
+        highlightCorrect();
+        updateHPBars();
+        document.getElementById('btn-next').style.display = 'block';
+    }
+
+    function updateHPBars() {
+        document.getElementById('player-hp').style.width = playerHP + '%';
+        document.getElementById('ai-hp').style.width = aiHP + '%';
+    }
+
+    function useHint() {
+        if (hintUsed) return;
+        hintUsed = true;
+        document.getElementById('btn-hint').disabled = true;
+
+        let q = questions[currentIdx];
+        let btns = Array.from(document.querySelectorAll('.btn-opt'));
+        let wrongs = btns.filter(b => b.innerText !== q.options[q.correct]);
+        
+        // Loại 2 câu sai
+        wrongs.sort(() => Math.random() - 0.5);
+        wrongs[0].style.visibility = 'hidden';
+        if (wrongs[1]) wrongs[1].style.visibility = 'hidden';
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        loadQuestion();
+    }
+
+    function endGame() {
+        clearInterval(timer);
+        let endTitle = document.getElementById('end-title');
+        let endDesc = document.getElementById('end-desc');
+
+        if (playerHP > aiHP) {
+            endTitle.innerText = "🏆 VICTORY! K.O STRAWBERRY AI!";
+            endTitle.style.color = "#22c55e";
+            endDesc.innerText = "Kiến thức Giới từ & Collocation của bạn thực sự bá đạo! AI hoàn toàn bị khuất phục.";
+        } else if (playerHP < aiHP) {
+            endTitle.innerText = "💀 DEFEAT! AI ĐÃ THẮNG";
+            endTitle.style.color = "#ef4444";
+            endDesc.innerText = "Strawberry AI đã phản công thành công. Hãy ôn lại danh sách kiến thức và thử lại nhé!";
+        } else {
+            endTitle.innerText = "🤝 HÒA NHAU!";
+            endTitle.style.color = "#f59e0b";
+            endDesc.innerText = "Màn đấu trí ngang tài ngang sức!";
+        }
+
+        document.getElementById('end-screen').style.display = 'flex';
+    }
+
+    function restartGame() {
+        currentIdx = 0;
+        playerHP = 100;
+        aiHP = 100;
+        hintUsed = false;
+        document.getElementById('btn-hint').disabled = false;
+        updateHPBars();
+        document.getElementById('end-screen').style.display = 'none';
+        loadQuestion();
+    }
+</script>
+
+</body>
+</html>
